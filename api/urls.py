@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from project_config import SessionLocal
+from project_config import app,SessionLocal
 
 router = APIRouter()
 
@@ -11,3 +11,10 @@ def get_postgres_db():
         yield db
     finally:
         db.close()
+
+
+@app.get("/")
+def read_root():
+    return {"Hello": "World"}
+
+
