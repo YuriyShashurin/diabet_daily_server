@@ -13,7 +13,7 @@ def get_postgres_db():
         db.close()
 
 
-@app.get("/")
+@router.get("/")
 def read_root():
     return {"Hello": "World"}
 
