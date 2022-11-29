@@ -18,3 +18,11 @@ def read_root():
     return {"Hello": "World"}
 
 
+@app.post("/signup")
+def signup():
+    return {"Hello": "World"}
+
+
+@app.post("/login")
+def login():
+    return {"Hello": "World"}

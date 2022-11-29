@@ -17,6 +17,7 @@ from starlette.requests import Request
 from starlette.responses import Response
 from project_config.db import SessionLocal
 from api import urls
+from api import models
 
 app.include_router(urls.router, prefix='/api/v1', tags=["api"])
 
