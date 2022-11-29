@@ -1,6 +1,8 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
-from project_config import app,SessionLocal
+from api.schemas import UserCreate, UserResponse
+from project_config import app, SessionLocal
+from sqlalchemy.orm import Session
 
 router = APIRouter()
 
@@ -13,16 +15,16 @@ def get_postgres_db():
         db.close()
 
 
-@router.get("/")
+@router.get("/app/")
 def read_root():
     return {"Hello": "World"}
 
 
-@app.post("/signup")
-def signup():
-    return {"Hello": "World"}
+@app.post("/signup/", response_model=UserResponse)
+def signup(signup_data: UserCreate, db: Session = Depends(get_postgres_db)):
+    return signup_data
 
 
-@app.post("/login")
+@app.post("/login/")
 def login():
     return {"Hello": "World"}

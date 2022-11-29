@@ -12,9 +12,7 @@ class LoginUserBase(BaseModel):
 
 # Модель для принятия данных для логина
 class UserCreate(LoginUserBase):
-    name: str
-    birth: Optional[date]
-    tg: Optional[str]
+
     email: Optional[EmailStr]
 
 
