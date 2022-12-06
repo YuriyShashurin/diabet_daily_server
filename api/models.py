@@ -13,7 +13,7 @@ class User(Base):
     __tablename__ = 'user'
     id = Column(UUID(as_uuid=True), primary_key=True, index=True, unique=True, default=uuid.uuid4)
     username = Column(String(50), unique=True)
-    password = Column(LargeBinary)
+    password = Column(String(50))
     email = Column(String(50), nullable=True)
     telegram_token = Column(UUID(as_uuid=True), index=True, unique=True, default=uuid.uuid4)
     is_authenticated = Column(Boolean, default=False)
