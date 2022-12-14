@@ -37,9 +37,9 @@ async def login_user(data: LoginUserBase, db: Session):
         return ['Error', err]
 
 
-async def logout_user(id, db: Session):
+async def logout_user(username, db: Session):
     try:
-        db_user = db.query(User).get(User.id == id)
+        db_user = db.query(User).get(User.username == username)
         if db_user:
             db_user.is_authenticated = False
             db.commit()

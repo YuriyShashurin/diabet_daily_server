@@ -26,5 +26,8 @@ class ConfigSettings(BaseSettings):
     postgres_password_test: str
     postgres_port_test: int
 
+    # JWT params
+    secret_key: str
+
     class Config:
         env_file = ".env"
