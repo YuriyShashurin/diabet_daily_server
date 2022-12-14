@@ -1,11 +1,11 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi_jwt_auth import AuthJWT
 from fastapi_jwt_auth.exceptions import AuthJWTException
 from fastapi.responses import JSONResponse
 
-from api.schemas import UserCreate, UserResponse, LoginUserBase, User, JWTSettings
+from api.schemas import UserCreate, UserToken, UserLogout, LoginUserBase, User, JWTSettings
 from project_config import app, SessionLocal, logger
 from sqlalchemy.orm import Session
 from api.utils import user_crud, user_validation
@@ -35,7 +35,7 @@ def authjwt_exception_handler(request: Request, exc: AuthJWTException):
     )
 
 
-@app.post("/signup/", response_model=UserResponse, status_code=201)
+@app.post("/signup/", response_model=User, status_code=201)
 async def signup(signup_data: UserCreate, db: Session = Depends(get_postgres_db)):
     new_user = await user_crud.user_register(signup_data, db)
     try:
@@ -49,27 +49,33 @@ async def signup(signup_data: UserCreate, db: Session = Depends(get_postgres_db)
             raise HTTPException(status_code=500, detail='Ошибка сервера, повторите позже')
 
 
-@app.post("/login/", response_model=UserResponse, status_code=201)
+@app.post("/login/", response_model=UserToken, status_code=201)
 async def login(login_data: LoginUserBase, db: Session = Depends(get_postgres_db), Authorize: AuthJWT = Depends()):
     user = await user_crud.login_user(login_data, db)
+
     try:
         if user.id:
-            expires = datetime.timedelta(days=1)
+            print('3', type(user.username))
+            expires = timedelta(days=1)
             access_token = Authorize.create_access_token(subject=user.username, expires_time=expires)
-            refresh_token = Authorize.create_refresh_token(subject=user.username, expires_time=expires)
-            return {"access_token": access_token, "refresh_token": refresh_token}
-    except:
-        if not user:
+            refresh_token = Authorize.create_refresh_token(subject=user.username)
+            return {'id': user.id, "access_token": access_token, "refresh_token": refresh_token}
+    except Exception as e:
+        if user is None:
             raise HTTPException(status_code=401, detail='Bad username or password')
-        else:
-            logger.error(f'Ошибка авторизации {user[0]} {user[1]} {login_data.username}')
+        # TODO: поменять обработку событий
+        elif user[0] == 'Error':
+            print(e)
+            logger.error(f'Ошибка авторизации {user[0]} {user[1]}')
             raise HTTPException(status_code=500, detail='Ошибка сервера, повторите позже')
+        else:
+            print(e)
+            raise HTTPException(status_code=e.status_code, detail=e.message)
 
 
 @app.post('/refresh')
 def refresh(Authorize: AuthJWT = Depends()):
     Authorize.jwt_refresh_token_required()
-
     current_user = Authorize.get_jwt_subject()
     new_access_token = Authorize.create_access_token(subject=current_user)
     return {"access_token": new_access_token}
@@ -78,7 +84,7 @@ def refresh(Authorize: AuthJWT = Depends()):
 # Обработка запроса на выход
 # TODO: поменять на JWT
 
-@app.post('/logout/', response_model=UserResponse, status_code=201)
+@app.post('/logout/', response_model=UserLogout, status_code=201)
 async def logout_user(Authorize: AuthJWT = Depends(), db: Session = Depends(get_postgres_db)):
     Authorize.jwt_required()
     current_user = Authorize.get_jwt_subject()

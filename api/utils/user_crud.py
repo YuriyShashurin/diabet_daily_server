@@ -1,3 +1,4 @@
+from sqlalchemy import and_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -23,16 +24,19 @@ async def user_register(data, db):
 
 
 async def login_user(data: LoginUserBase, db: Session):
+    print(data.username, data.password)
+
+    db_user = db.query(User).filter(User.username==data.username).first()
+    print('1', db_user)
     try:
-        db_user = db.query(User).get(User.username == data.username and User.password == data.password)
-        if db_user:
+        if db_user is None:
+            return None
+        else:
             db_user.is_authenticated = True
             db.commit()
             db.refresh(db_user)
             logger.info(f'The User @{data.username} logged in')
             return db_user
-        else:
-            return None
     except Exception as err:
         return ['Error', err]
 
@@ -40,6 +44,7 @@ async def login_user(data: LoginUserBase, db: Session):
 async def logout_user(username, db: Session):
     try:
         db_user = db.query(User).get(User.username == username)
+
         if db_user:
             db_user.is_authenticated = False
             db.commit()

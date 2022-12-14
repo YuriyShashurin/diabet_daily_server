@@ -24,14 +24,16 @@ class User(BaseModel):
     id: UUID4
 
 
-class UserResponse(User):
+class UserToken(User):
+    access_token: str
+    refresh_token: str
+
+
+class UserLogout(User):
     is_authenticated: bool
 
-    class Config:
-        orm_mode = True
 
-
-class UserItem(UserResponse):
+class UserItem(User):
     username: str
     name: str
     birth: date
