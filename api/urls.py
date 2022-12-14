@@ -34,6 +34,13 @@ def authjwt_exception_handler(request: Request, exc: AuthJWTException):
         content={"detail": exc.message}
     )
 
+@app.post('/refresh')
+def refresh(Authorize: AuthJWT = Depends()):
+    Authorize.jwt_refresh_token_required()
+    current_user = Authorize.get_jwt_subject()
+    expires = timedelta(days=2)
+    new_access_token = Authorize.create_access_token(subject=current_user, expires_time=expires)
+    return {"access_token": new_access_token}
 
 @app.post("/signup/", response_model=User, status_code=201)
 async def signup(signup_data: UserCreate, db: Session = Depends(get_postgres_db)):
@@ -55,7 +62,6 @@ async def login(login_data: LoginUserBase, db: Session = Depends(get_postgres_db
 
     try:
         if user.id:
-            print('3', type(user.username))
             expires = timedelta(days=1)
             access_token = Authorize.create_access_token(subject=user.username, expires_time=expires)
             refresh_token = Authorize.create_refresh_token(subject=user.username)
@@ -71,14 +77,6 @@ async def login(login_data: LoginUserBase, db: Session = Depends(get_postgres_db
         else:
             print(e)
             raise HTTPException(status_code=e.status_code, detail=e.message)
-
-
-@app.post('/refresh')
-def refresh(Authorize: AuthJWT = Depends()):
-    Authorize.jwt_refresh_token_required()
-    current_user = Authorize.get_jwt_subject()
-    new_access_token = Authorize.create_access_token(subject=current_user)
-    return {"access_token": new_access_token}
 
 
 # Обработка запроса на выход
