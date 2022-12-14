@@ -34,13 +34,19 @@ def authjwt_exception_handler(request: Request, exc: AuthJWTException):
         content={"detail": exc.message}
     )
 
+
 @app.post('/refresh')
 def refresh(Authorize: AuthJWT = Depends()):
     Authorize.jwt_refresh_token_required()
     current_user = Authorize.get_jwt_subject()
+    user_id = Authorize.get_raw_jwt()['id']
     expires = timedelta(days=2)
-    new_access_token = Authorize.create_access_token(subject=current_user, expires_time=expires)
+    another_claims = {"id": user_id}
+    new_access_token = Authorize.create_access_token(subject=current_user,
+                                                     expires_time=expires,
+                                                     user_claims=another_claims)
     return {"access_token": new_access_token}
+
 
 @app.post("/signup/", response_model=User, status_code=201)
 async def signup(signup_data: UserCreate, db: Session = Depends(get_postgres_db)):
@@ -63,9 +69,15 @@ async def login(login_data: LoginUserBase, db: Session = Depends(get_postgres_db
     try:
         if user.id:
             expires = timedelta(days=1)
-            access_token = Authorize.create_access_token(subject=user.username, expires_time=expires)
+            another_claims = {"id": user.id}
+            access_token = Authorize.create_access_token(subject=user.username,
+                                                         expires_time=expires,
+                                                         user_claims=another_claims)
             refresh_token = Authorize.create_refresh_token(subject=user.username)
-            return {'id': user.id, "access_token": access_token, "refresh_token": refresh_token}
+            return {'id': user.id,
+                    "access_token": access_token,
+                    "refresh_token": refresh_token,
+                    }
     except Exception as e:
         if user is None:
             raise HTTPException(status_code=401, detail='Bad username or password')
@@ -80,7 +92,6 @@ async def login(login_data: LoginUserBase, db: Session = Depends(get_postgres_db
 
 
 # Обработка запроса на выход
-# TODO: поменять на JWT
 
 @app.post('/logout/', response_model=UserLogout, status_code=201)
 async def logout_user(Authorize: AuthJWT = Depends(), db: Session = Depends(get_postgres_db)):
