@@ -22,6 +22,10 @@ class UserCreate(LoginUserBase):
 
 class User(BaseModel):
     id: UUID4
+    is_authenticated: bool
+
+    class Config:
+        orm_mode = True
 
 
 class UserToken(User):

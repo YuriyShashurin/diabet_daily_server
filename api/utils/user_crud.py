@@ -10,7 +10,7 @@ from project_config import logger
 async def user_register(data, db):
     try:
         new_user = User(**data.dict())
-        new_user.is_authenticated = True
+        new_user.is_authenticated = False
         db.add(new_user)
         db.commit()
         db.refresh(new_user)
@@ -38,6 +38,7 @@ async def login_user(data: LoginUserBase, db: Session):
             logger.info(f'The User @{data.username} logged in')
             return db_user
     except Exception as err:
+        print(err)
         return ['Error', err]
 
 
