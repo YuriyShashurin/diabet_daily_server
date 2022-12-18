@@ -1,6 +1,6 @@
 from pydantic import BaseModel, EmailStr, UUID4
 
-from datetime import date
+from datetime import date, datetime
 from typing import Optional
 from project_config import config
 
@@ -43,6 +43,22 @@ class UserItem(User):
     birth: date
     tg: Optional[str]
     email: Optional[EmailStr]
+
+    class Config:
+        orm_mode = True
+
+
+class RegisterTelegramPost(BaseModel):
+    token: str
+    telegram_id: int
+
+
+class SugarIndicationBase(BaseModel):
+    sugar_indication: float
+
+
+class SugarIndicationResponse(SugarIndicationBase):
+    date_time: datetime
 
     class Config:
         orm_mode = True

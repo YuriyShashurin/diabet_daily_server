@@ -1,7 +1,8 @@
+from datetime import datetime
 from typing import Any
 
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, String, Integer, ForeignKey, Date, Float, Boolean, LargeBinary
+from sqlalchemy import Column, String, Integer, ForeignKey, Date, Float, Boolean, LargeBinary, DateTime, func
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
@@ -16,6 +17,7 @@ class User(Base):
     password = Column(String(50))
     email = Column(String(50), nullable=True)
     telegram_token = Column(UUID(as_uuid=True), index=True, unique=True, default=uuid.uuid4)
+    telegram_user_id = Column(Integer, nullable=True)
     is_authenticated = Column(Boolean, default=False)
 
 
@@ -35,3 +37,17 @@ class UserProfile(Base):
     tg = Column(String(50), nullable=True)
 
     user = relationship('User', backref='profiles')
+
+
+class SugarIndication(Base):
+    __tablename__ = 'sugar_indication'
+
+    id = Column(UUID(as_uuid=True), primary_key=True, index=True, unique=True, default=uuid.uuid4)
+    user_id = Column(
+        UUID,
+        ForeignKey('user.id', ondelete='CASCADE'),
+        nullable=False,
+    )
+    sugar_indication = Column(Float)
+    date_time = Column(DateTime(timezone=True), default=datetime.now())
+

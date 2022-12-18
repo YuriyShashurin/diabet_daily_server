@@ -1,3 +1,4 @@
+import json
 from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -5,7 +6,8 @@ from fastapi_jwt_auth import AuthJWT
 from fastapi_jwt_auth.exceptions import AuthJWTException
 from fastapi.responses import JSONResponse
 
-from api.schemas import UserCreate, UserToken, UserLogout, LoginUserBase, User, JWTSettings
+from api.schemas import UserCreate, UserToken, UserLogout, LoginUserBase, User, JWTSettings, \
+    RegisterTelegramPost
 from project_config import app, SessionLocal, logger
 from sqlalchemy.orm import Session
 from api.utils import user_crud, user_validation
@@ -109,3 +111,27 @@ async def logout_user(Authorize: AuthJWT = Depends(), db: Session = Depends(get_
         else:
             logger.error(f'Ошибка разлогирования {user[0]} {user[1]} {id}')
             raise HTTPException(status_code=500, detail='Ошибка сервера, повторите позже')
+
+
+@app.post('/add_in_telegram/', status_code=201)
+async def add_in_telegram(telegram_data: RegisterTelegramPost, db: Session = Depends(get_postgres_db)):
+    user = await user_crud.add_telegram_user(telegram_data.token, telegram_data.telegram_id, db)
+    print(user)
+    if user:
+        result = {
+            'id': telegram_data.telegram_id,
+            'result': user,
+            'msg': 'Вы успешно зарегстировались в телеграм_боте'
+        }
+        return JSONResponse(status_code=201, content=json.dumps(result))
+    else:
+        result = {
+            'id': telegram_data.telegram_id,
+            'result': user,
+            'msg': 'Пользователь с указанным токеном не найден. Перед регистрацией в телеграм_боте, вам необходимо '
+                   'зарегистироваться на сайте'
+        }
+        logger.warning(f'Пользователь {telegram_data.telegram_id} был не найден или уже существует')
+        return JSONResponse(status_code=201, content=result)
+
+
