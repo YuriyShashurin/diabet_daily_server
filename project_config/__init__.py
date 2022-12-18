@@ -2,6 +2,7 @@ import logging
 from logging.config import dictConfig
 
 from fastapi import FastAPI
+
 from project_config import settings
 
 from project_config.logs_config import LogConfig
@@ -16,10 +17,10 @@ logger = logging.getLogger("diabet_daily")
 from starlette.requests import Request
 from starlette.responses import Response
 from project_config.db import SessionLocal
-from api import urls
-from api import models
+from api.views import auth_urls,api_urls
 
-app.include_router(urls.router, prefix='/api/v1', tags=["api"])
+app.include_router(auth_urls.auth_router, prefix='/auth', tags=["auth"])
+app.include_router(api_urls.api_router, prefix='/api/v1', tags=["api"])
 
 
 @app.middleware('http')

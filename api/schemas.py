@@ -57,6 +57,20 @@ class SugarIndicationBase(BaseModel):
     sugar_indication: float
 
 
+class SugarIndicationRequestTelegram(SugarIndicationBase):
+    telegram_id: int
+
+    class Config:
+        orm_mode = True
+
+
+class SugarIndicationResponseSite(SugarIndicationBase):
+    user_id: UUID4
+
+    class Config:
+        orm_mode = True
+
+
 class SugarIndicationResponse(SugarIndicationBase):
     date_time: datetime
 

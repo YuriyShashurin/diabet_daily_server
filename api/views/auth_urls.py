@@ -1,32 +1,24 @@
 import json
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi_jwt_auth import AuthJWT
 from fastapi_jwt_auth.exceptions import AuthJWTException
 from fastapi.responses import JSONResponse
-
+from api.views.get_postgres_db import get_postgres_db
 from api.schemas import UserCreate, UserToken, UserLogout, LoginUserBase, User, JWTSettings, \
     RegisterTelegramPost
-from project_config import app, SessionLocal, logger
+from project_config import app, logger
 from sqlalchemy.orm import Session
-from api.utils import user_crud, user_validation
+from api.utils import user_crud
 
-router = APIRouter()
+auth_router = APIRouter()
 
 
 # callback to get your configuration
 @AuthJWT.load_config
 def get_config():
     return JWTSettings()
-
-
-def get_postgres_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 
 @app.exception_handler(AuthJWTException)
@@ -37,7 +29,7 @@ def authjwt_exception_handler(request: Request, exc: AuthJWTException):
     )
 
 
-@app.post('/refresh')
+@auth_router.post('/refresh/')
 def refresh(Authorize: AuthJWT = Depends()):
     Authorize.jwt_refresh_token_required()
     current_user = Authorize.get_jwt_subject()
@@ -50,7 +42,7 @@ def refresh(Authorize: AuthJWT = Depends()):
     return {"access_token": new_access_token}
 
 
-@app.post("/signup/", response_model=User, status_code=201)
+@auth_router.post("/signup/", response_model=User, status_code=201)
 async def signup(signup_data: UserCreate, db: Session = Depends(get_postgres_db)):
     new_user = await user_crud.user_register(signup_data, db)
     try:
@@ -65,7 +57,7 @@ async def signup(signup_data: UserCreate, db: Session = Depends(get_postgres_db)
             raise HTTPException(status_code=500, detail='Ошибка сервера, повторите позже')
 
 
-@app.post("/login/", response_model=UserToken, status_code=201)
+@auth_router.post("/login/", response_model=UserToken, status_code=201)
 async def login(login_data: LoginUserBase, db: Session = Depends(get_postgres_db), Authorize: AuthJWT = Depends()):
     user = await user_crud.login_user(login_data, db)
     try:
@@ -97,7 +89,7 @@ async def login(login_data: LoginUserBase, db: Session = Depends(get_postgres_db
 
 # Обработка запроса на выход
 
-@app.post('/logout/', response_model=UserLogout, status_code=201)
+@auth_router.post('/logout/', response_model=UserLogout, status_code=201)
 async def logout_user(Authorize: AuthJWT = Depends(), db: Session = Depends(get_postgres_db)):
     Authorize.jwt_required()
     current_user = Authorize.get_jwt_subject()
@@ -113,7 +105,7 @@ async def logout_user(Authorize: AuthJWT = Depends(), db: Session = Depends(get_
             raise HTTPException(status_code=500, detail='Ошибка сервера, повторите позже')
 
 
-@app.post('/add_in_telegram/', status_code=201)
+@auth_router.post('/add_in_telegram/', status_code=201)
 async def add_in_telegram(telegram_data: RegisterTelegramPost, db: Session = Depends(get_postgres_db)):
     user = await user_crud.add_telegram_user(telegram_data.token, telegram_data.telegram_id, db)
     print(user)
