@@ -62,12 +62,12 @@ async def add_telegram_user(token, telegram_id, db):
     try:
         user = db.query(User).filter(User.telegram_token == token).first()
         if user:
-            if user.telegram_user_id is None:
-                return False
-            else:
-                user.telegram_user_id = telegram_id
-                logger.info(f'Пользователь {user.username} был связан с телеграм_айди {telegram_id}')
-                return True
+            user.telegram_user_id = telegram_id
+            print(user.telegram_user_id)
+            db.commit()
+            db.refresh(user)
+            logger.info(f'Пользователь {user.username} был связан с телеграм_айди {telegram_id}')
+            return True
         else:
             return False
     except Exception as e:

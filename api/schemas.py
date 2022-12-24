@@ -66,13 +66,8 @@ class SugarIndicationRequestTelegram(SugarIndicationBase):
 
 class SugarIndicationResponseSite(SugarIndicationBase):
     user_id: UUID4
-
-    class Config:
-        orm_mode = True
-
-
-class SugarIndicationResponse(SugarIndicationBase):
     date_time: datetime
 
     class Config:
         orm_mode = True
+
