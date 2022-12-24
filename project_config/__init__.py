@@ -2,6 +2,7 @@ import logging
 from logging.config import dictConfig
 
 from fastapi import FastAPI
+from starlette.middleware.cors import CORSMiddleware
 
 from project_config import settings
 
@@ -13,6 +14,14 @@ app = FastAPI()
 
 dictConfig(LogConfig().dict())
 logger = logging.getLogger("diabet_daily")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 from starlette.requests import Request
 from starlette.responses import Response
